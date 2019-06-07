@@ -1,0 +1,18 @@
+---
+# Yum packages
+gogs_packages:
+  - openssh-server
+  - git
+
+# Mysql root
+gogs_mysql_root_password: 'password'
+gogs_mysql_user: 'root'
+
+# Gogs
+gogs_gogs_version: '0.11.86'
+gogs_gogs_install: '/opt'
+gogs_gogs_repository: '/opt/git/gogs-repositories'
+gogs_mysql_host: '127.0.0.1:3306'
+gogs_mysql_gogs_user: 'gogs_user'
+gogs_mysql_gogs_password: 'gogs_pass'
+gogs_mysql_gogs_db: 'gogs_db'

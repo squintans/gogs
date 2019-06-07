@@ -1,0 +1,94 @@
+---
+# Import tasks.
+- name: Import tasks RedHat
+  include_tasks: task_RedHat.yml
+  when: ansible_os_family == 'RedHat'
+
+- name: Import tasks Ubuntu
+  include_tasks: task_Ubuntu.yml
+  when: ansible_distribution == 'Ubuntu'
+
+# Git user/group
+- name: Add git user/group
+  block:
+    - name: Add group
+      group:
+        name: git
+        state: present
+   
+    - name: Add git user
+      user:
+        name: git
+        group: git
+        home: /opt/git
+  tags: t_user-group
+
+# Mysql create
+- name: Mysql create db and user
+  block:
+    - name: Create a new database
+      mysql_db: 
+        name: "{{ gogs_mysql_gogs_db }}"
+        encoding: utf8mb4
+        collation: utf8mb4_general_ci
+        state: present
+        login_user: "{{ gogs_mysql_user }}"
+        login_password: "{{ gogs_mysql_root_password }}"
+
+    - name: Create database user
+      mysql_user: 
+        name: "{{ gogs_mysql_gogs_user }}"
+        password: "{{ gogs_mysql_gogs_password }}"
+        priv: "{{ gogs_mysql_gogs_db }}.*:ALL"
+        state: present
+        login_user: "{{ gogs_mysql_user }}"
+        login_password: "{{ gogs_mysql_root_password }}"
+  tags: t_mysql-create
+
+# Install gogs
+- name: Install gogs
+  block:
+  - name: Download and extract gogs
+    unarchive:
+      src: "https://dl.gogs.io/{{ gogs_gogs_version }}/gogs_{{ gogs_gogs_version }}_linux_amd64.tar.gz"
+      dest: "{{ gogs_gogs_install }}"
+      remote_src: True
+    tags: t_download
+
+  - name: Create directory conf
+    file:
+      path: "{{ gogs_gogs_install }}/gogs/custom/conf"
+      state: directory
+      recurse: yes
+    tags: t_gogs-conf-dir
+
+# Templates
+- name: Templates
+  block:
+    - name: Gogs Conf Template
+      template: 
+        src: gogs_app.ini.j2
+        dest: "{{ gogs_gogs_install }}/gogs/custom/conf/app.ini"
+      tags: t_gogs-conf
+
+    - name: Gogs Systemd Template
+      template: 
+        src: gogs_service.j2
+        dest: /etc/systemd/system/gogs.service
+      notify: h_restart-gogs
+      tags: t_gogs-service
+    
+    - name: Gogs Nginx Template
+      template: 
+        src: gogs_nginx.j2
+        dest: /etc/nginx/conf.d/gogs.conf
+      notify: h_restart-nginx
+      tags: t_gogs-nginx    
+
+# Gogs Permissions
+- name: Gogs Permissions
+  file:
+    path: /opt/gogs
+    owner: git
+    group: git
+    mode: '0775'
