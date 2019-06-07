@@ -88,7 +88,7 @@
 # Gogs Permissions
 - name: Gogs Permissions
   file:
-    path: /opt/gogs
+    path: "{{ gogs_gogs_install }}/gogs"
     owner: git
     group: git
     mode: '0775'
