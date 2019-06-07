@@ -3,8 +3,11 @@ Ansible Role: Gogs
 
 This role install Git - Gogs - MariaDB - Nginx on Centos7 and Ubuntu.
 
-The first register user will have admin privileges.
+Access from:
+- http://localhost:3000 - Gogs server
+- http://ansible_hostname - Nginx server Vhost
 
+The first register user will have admin privileges.
 
 Requirements
 ------------
