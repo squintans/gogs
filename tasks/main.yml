@@ -62,33 +62,45 @@
       recurse: yes
     tags: t_gogs-conf-dir
 
-# Templates
-- name: Templates
-  block:
-    - name: Gogs Conf Template
-      template: 
-        src: gogs_app.ini.j2
-        dest: "{{ gogs_gogs_install }}/gogs/custom/conf/app.ini"
-      tags: t_gogs-conf
+  # Templates
+  - name: Gogs Conf Template
+    template: 
+      src: gogs_app.ini.j2
+      dest: "{{ gogs_gogs_install }}/gogs/custom/conf/app.ini"
+    tags: t_gogs-conf
 
-    - name: Gogs Systemd Template
-      template: 
-        src: gogs_service.j2
-        dest: /etc/systemd/system/gogs.service
-      notify: h_restart-gogs
-      tags: t_gogs-service
-    
-    - name: Gogs Nginx Template
-      template: 
-        src: gogs_nginx.j2
-        dest: /etc/nginx/conf.d/gogs.conf
-      notify: h_restart-nginx
-      tags: t_gogs-nginx    
+  - name: Gogs Systemd Template
+    template: 
+      src: gogs_service.j2
+      dest: /etc/systemd/system/gogs.service
+    tags: t_gogs-service
+  
+  - name: Gogs Nginx Template
+    template: 
+      src: gogs_nginx.j2
+      dest: /etc/nginx/conf.d/gogs.conf
+    tags: t_gogs-nginx    
 
-# Gogs Permissions
-- name: Gogs Permissions
-  file:
-    path: "{{ gogs_gogs_install }}/gogs"
-    owner: git
-    group: git
-    mode: '0775'
+  # Gogs Permissions
+  - name: Gogs Permissions
+    file:
+      path: "{{ gogs_gogs_install }}/gogs"
+      owner: git
+      group: git
+      mode: '0775'
+
+  # Services.
+  - name: Services
+    service: 
+      name: "{{ item }}"
+      state: restarted
+      enabled: yes
+    loop:
+      - nginx
+      - gogs
+
+  # Nginx Verify is listening on port 80
+  - name: Nginx Verify port 80
+    wait_for:
+      port: 80
+      timeout: 2
